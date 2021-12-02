@@ -1,8 +1,5 @@
 # nix-std
 
-[![Build
-Status](https://travis-ci.org/chessai/nix-std.svg?branch=master)](https://travis-ci.org/chessai/nix-std)
-
 no-nixpkgs standard library for the nix expression language.
 
 ## Usage
