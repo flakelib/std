@@ -14,6 +14,14 @@ in section "std.function" {
     (assertEqual 2 (testFn testArgs))
     (assertEqual 2 (testFunctor testArgs))
   ];
+  show = string.unlines [
+    (assertEqual "<<lambda>>" (types.function.show function.id))
+    (assertEqual "{ a, b, c ? <<code>> }: <<code>>" (types.function.show testFn))
+  ];
+  check = string.unlines [
+    (assertEqual true (types.function.check testFn))
+    (assertEqual true (types.function.check testFunctor))
+  ];
   args = string.unlines [
     (assertEqual { a = false; b = false; c = true; } (function.args testFn))
     (assertEqual { a = false; b = false; c = true; } (function.args testFunctor))

@@ -1,14 +1,17 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip;
+  inherit (function) const compose flip;
 };
 
 let
   imports = {
+    bool = import ./bool.nix;
     list = import ./list.nix;
     num = import ./num.nix;
     set = import ./set.nix;
     string = import ./string.nix;
+    types = import ./types.nix;
+    inherit function;
   };
   _null = null;
 
@@ -18,7 +21,7 @@ let
     then "true"
     else "false";
   showFloat = builtins.toString;
-  showFunction = const "<<lambda>>";
+  showFunction = types.function.show;
   showInt = builtins.toString;
   showList = ls: "[ " + imports.string.concatSep ", " (imports.list.map showInternal ls) + " ]";
   showNull = const "null";
@@ -35,7 +38,7 @@ let
         shows = [
           { isType = builtins.isBool; showType = showBool; }
           { isType = builtins.isFloat; showType = showFloat; }
-          { isType = builtins.isFunction; showType = showFunction; }
+          { isType = function.isFunction; showType = showFunction; }
           { isType = builtins.isInt; showType = showInt; }
           { isType = builtins.isList; showType = showList; }
           { isType = builtins.isNull; showType = showNull; }
@@ -200,4 +203,16 @@ rec {
           cons = x: xs: { _0 = x; _1 = xs; };
         };
     in imports.list.foldl' either ht._0 ht._1;
+
+  function = mkType {
+    name = "function";
+    description = "function";
+    check = f: imports.function.isLambda f || imports.function.isFunctor f;
+    show = f: let
+      args = imports.function.args f;
+      showArg = k: isOptional: imports.bool.ifThenElse isOptional "${k} ? <<code>>" k;
+      body = imports.string.intercalate ", " (compose imports.set.values (imports.set.map showArg) args);
+      withArgs = "{ " + body + " }: <<code>>";
+    in imports.bool.ifThenElse (args == { }) "<<lambda>>" withArgs;
+  };
 }
