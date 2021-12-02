@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) id;
+  inherit (function) id flip;
   list = import ./list.nix;
 };
 
@@ -50,6 +50,14 @@ rec {
   filter = f: s: builtins.listToAttrs (list.concatMap (name: let
     value = s.${name};
   in list.optional (f name value) { inherit name value; }) (keys s));
+
+  /* without :: [key] -> set -> set
+  */
+  without = flip builtins.removeAttrs;
+
+  /* retain :: [key] -> set -> set
+  */
+  retain = keys: builtins.intersectAttrs (gen keys id);
 
   /* traverse :: Applicative f => (value -> f
   */

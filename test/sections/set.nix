@@ -18,4 +18,6 @@ in section "std.set" {
   ] (set.toList testSet);
   fromList = assertEqual testSet (set.fromList (set.toList testSet));
   gen = assertEqual (set.gen [ "a" "b" ] id) { a = "a"; b = "b"; };
+  without = assertEqual (set.without [ "a" ] { a = 0; b = 1; }) { b = 1; };
+  retain = assertEqual (set.retain [ "a" ] { a = 0; b = 1; }) { a = 0; };
 }
