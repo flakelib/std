@@ -22,4 +22,8 @@ rec {
   /* toOptional :: bool -> a -> optional a
   */
   toOptional = b: x: if b then optional.just x else optional.nothing;
+
+  /* toNullable :: bool -> a -> a | null
+  */
+  toNullable = b: x: if b then x else null;
 }
