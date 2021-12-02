@@ -21,4 +21,16 @@ in section "std.set" {
   without = assertEqual (set.without [ "a" ] { a = 0; b = 1; }) { b = 1; };
   retain = assertEqual (set.retain [ "a" ] { a = 0; b = 1; }) { a = 0; };
   optional = assertEqual (set.optional false { a = 0; }) { };
+  get = assertEqual (set.get "a" { a = 0; }) 0;
+  getOr = assertEqual (set.getOr 0 "a" {}) 0;
+  at = assertEqual (set.at [ "a" "b" ] { a.b = 0; }) 0;
+  atOr = assertEqual (set.atOr null [ "a" "b" "c" ] { a.b = 0; }) null;
+  lookup = string.unlines [
+    (assertEqual (set.lookup "a" { a = 0; }) (optional.just 0))
+    (assertEqual (set.lookup "a" { }) optional.nothing)
+  ];
+  lookupAt = string.unlines [
+    (assertEqual (set.lookupAt [ "a" "b" ] { a.b = 0; }) (optional.just 0))
+    (assertEqual (set.lookupAt [ "a" "c" ] { a.b = 0; }) optional.nothing)
+  ];
 }

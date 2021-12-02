@@ -1,7 +1,9 @@
 with rec {
+  bool = import ./bool.nix;
   function = import ./function.nix;
   inherit (function) id flip;
   list = import ./list.nix;
+  _optional = import ./optional.nix;
 };
 
 rec {
@@ -20,6 +22,35 @@ rec {
   /* assign :: key -> value -> set -> set
   */
   assign = k: v: r: r // { "${k}" = v; };
+
+  /* get :: key -> set -> value
+  */
+  get = k: s: s.${k};
+
+  /* getOr :: default -> key -> set -> value
+  */
+  getOr = default: k: s: s.${k} or default;
+
+  /* lookup :: key -> set -> optional value
+  */
+  lookup = k: s: bool.toOptional (s ? ${k}) s.${k};
+
+  /* lookupAt :: [key] -> set -> optional value
+  */
+  lookupAt = path: s: list.foldl' (s: k:
+    _optional.monad.bind s (lookup k)
+  ) (_optional.just s) path;
+
+  /* at :: [key] -> set -> value
+  */
+  at = path: s: list.foldl' (flip get) s path;
+
+  /* atOr :: default -> [key] -> set -> value
+  */
+  atOr = default: path: s: _optional.match (lookupAt path s) {
+    nothing = default;
+    just = id;
+  };
 
   /* optional :: bool -> set -> set
 
