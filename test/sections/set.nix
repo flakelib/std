@@ -20,4 +20,5 @@ in section "std.set" {
   gen = assertEqual (set.gen [ "a" "b" ] id) { a = "a"; b = "b"; };
   without = assertEqual (set.without [ "a" ] { a = 0; b = 1; }) { b = 1; };
   retain = assertEqual (set.retain [ "a" ] { a = 0; b = 1; }) { a = 0; };
+  optional = assertEqual (set.optional false { a = 0; }) { };
 }

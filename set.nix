@@ -21,6 +21,13 @@ rec {
   */
   assign = k: v: r: r // { "${k}" = v; };
 
+  /* optional :: bool -> set -> set
+
+     Optionally keep a set. If the condition is true, return the set
+     unchanged, otherwise return an empty set.
+  */
+  optional = b: s: if b then s else empty;
+
   match = o: { empty, assign }:
     if o == {}
     then empty
