@@ -10,6 +10,7 @@ in section "std.set" {
   keys = assertEqual ["a" "b" "c"] (set.keys testSet);
   values = assertEqual [0 1 2] (set.values testSet);
   map = assertEqual { a = 1; b = 2; c = 3; } (set.map (_: num.add 1) testSet);
+  mapToList = assertEqual [ 1 2 3 ] (set.mapToList (_: num.add 1) testSet);
   filter = assertEqual { b = 1; } (set.filter (k: v: v == 1) testSet);
   toList = assertEqual [
     { _0 = "a"; _1 = 0; }

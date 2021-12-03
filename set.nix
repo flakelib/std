@@ -1,7 +1,7 @@
 with rec {
   bool = import ./bool.nix;
   function = import ./function.nix;
-  inherit (function) id flip;
+  inherit (function) id flip compose;
   list = import ./list.nix;
   _optional = import ./optional.nix;
 };
@@ -82,6 +82,10 @@ rec {
   /* map :: (key -> value -> value) -> set -> set
   */
   map = builtins.mapAttrs;
+
+  /* mapToList :: (key -> value -> value) -> set -> set
+  */
+  mapToList = f: compose values (map f);
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
