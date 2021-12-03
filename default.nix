@@ -4,6 +4,8 @@ rec {
   bool = import ./bool.nix;
   inherit (bool) true false not ifThenElse;
 
+  drv = import ./drv.nix;
+
   fixpoints = import ./fixpoints.nix;
   inherit (fixpoints) fix;
 
