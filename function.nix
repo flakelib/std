@@ -25,6 +25,8 @@ rec {
 
   setArgs = args: f: set.assign "__functionArgs" args (toFunctor f);
 
+  copyArgs = src: dst: setArgs (args src) dst;
+
   isLambda = builtins.isFunction;
   isFunctor = f: f ? __functor;
 
