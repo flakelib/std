@@ -21,6 +21,8 @@ rec {
 
   monoid = import ./monoid.nix;
 
+  nix = import ./nix.nix;
+
   nonempty = import ./nonempty.nix;
 
   nullable = import ./nullable.nix;

@@ -215,4 +215,11 @@ rec {
       withArgs = "{ " + body + " }: <<code>>";
     in imports.bool.ifThenElse (args == { }) "<<lambda>>" withArgs;
   };
+
+  flakeInput = mkType {
+    name = "flake input";
+    description = "flake input";
+    check = x: x ? narHash;
+    show = i: show i.sourceInfo;
+  };
 }
