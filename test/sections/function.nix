@@ -9,6 +9,7 @@ let
     __functor = _: testFn;
   };
   testArgs = { a = 0; b = 1; };
+  testOverrideFn = { a, b, c ? 1 }: { x = a + b + c; };
 in section "std.function" {
   callable = string.unlines [
     (assertEqual 2 (testFn testArgs))
@@ -54,5 +55,14 @@ in section "std.function" {
     (assertEqual 2 (function.wrapScoped { a = 1; } testFn testArgs))
     (assertEqual 3 (function.wrapScoped { a = 1; } testFn { inherit (testArgs) b; }))
     (assertEqual 3 (function.wrapScoped { c = 2; } testFn testArgs))
+  ];
+  overridable = string.unlines [
+    (assertEqual 2 (function.overridable testOverrideFn testArgs).x)
+    (assertEqual 2 ((function.overridable testOverrideFn testArgs).override { c = 1; }).x)
+    (assertEqual 3 ((function.overridable testOverrideFn testArgs).override { a = 1; }).x)
+    (assertEqual 3 (((function.overridable testOverrideFn testArgs).override { a = 2; }).override { a = 1; }).x)
+    (assertEqual 3 (((function.overridable testOverrideFn testArgs).override { c = 1; }).override { a = 1; }).x)
+    (assertEqual 2 (function.toFunctor testFunctor testArgs))
+    (assertEqual true (function.isFunctor (function.toFunctor testFn)))
   ];
 }

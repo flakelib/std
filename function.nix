@@ -1,5 +1,6 @@
 with rec {
   set = import ./set.nix;
+  types = import ./types.nix;
 };
 
 rec {
@@ -46,4 +47,31 @@ rec {
     inherit scope;
     __functor = self: args: self.f (scopedArgs self.scope self.f // args);
   };
+
+  overridable = f: args: let
+    value = f args;
+    applyArgs = args: o: if types.function.check o then o args else o;
+    override = {
+      __functor = self: o: overridable self.f (self.args // applyArgs self.args o);
+      __functionArgs = args f;
+      inherit f args value;
+      ${if value ? overrideAttrs then "overrideAttrs" else null} = value.overrideAttrs;
+    };
+    overrideAttrs = override': o: let
+      value = override'.value.overrideAttrs o;
+      override = override' // {
+        inherit value;
+        inherit (value) overrideAttrs;
+      };
+    in value // {
+      inherit override;
+      overrideAttrs = overrideAttrs override;
+    };
+  in if builtins.isAttrs value then value // {
+    inherit override;
+    ${if value ? overrideAttrs then "overrideAttrs" else null} = overrideAttrs override;
+    # TODO: overrideDerivation?
+  } else if types.function.check value then toFunctor value // {
+    inherit override;
+  } else value;
 }
