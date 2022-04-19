@@ -23,6 +23,14 @@ rec {
   */
   assign = k: v: r: r // { "${k}" = v; };
 
+  /* assignAt :: [key] -> value -> set -> set
+  */
+  assignAt = path: v: r: let
+    k = list.head path;
+    next = assignAt (list.tail path) v (r.${k} or { });
+  in if path == list.nil then v
+    else assign k next r;
+
   /* get :: key -> set -> value
   */
   get = k: s: s.${k};

@@ -24,6 +24,10 @@ in section "std.set" {
   optional = assertEqual (set.optional false { a = 0; }) { };
   get = assertEqual (set.get "a" { a = 0; }) 0;
   getOr = assertEqual (set.getOr 0 "a" {}) 0;
+  assignAt = assertEqual (set.assignAt [ "a" ] 0 { }) { a = 0; };
+  assignAtPath = assertEqual (set.assignAt [ "a" "x" ] 0 { }) { a.x = 0; };
+  assignAtEmpty = assertEqual (set.assignAt [ ] { a = 0; } testSet) { a = 0; };
+  assignAtMerge = assertEqual (set.assignAt [ "x" "y" ] 0 testSet) (testSet // { x.y = 0; });
   at = assertEqual (set.at [ "a" "b" ] { a.b = 0; }) 0;
   atOr = assertEqual (set.atOr null [ "a" "b" "c" ] { a.b = 0; }) null;
   lookup = string.unlines [
