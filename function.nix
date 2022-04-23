@@ -48,13 +48,14 @@ rec {
     __functor = self: args: self.f (scopedArgs self.scope self.f // args);
   };
 
-  overridable = f: args: let
-    value = f args;
-    applyArgs = args: o: if types.function.check o then o args else o;
+  overridable = f: arg: let
+    value = f arg;
+    applyArgs = arg: o: if types.function.check o then o arg else o;
     override = {
       __functor = self: o: overridable self.f (self.args // applyArgs self.args o);
       __functionArgs = args f;
-      inherit f args value;
+      inherit f value;
+      args = arg;
       ${if value ? overrideAttrs then "overrideAttrs" else null} = value.overrideAttrs;
     };
     overrideAttrs = override': o: let
