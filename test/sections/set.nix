@@ -38,4 +38,5 @@ in section "std.set" {
     (assertEqual (set.lookupAt [ "a" "b" ] { a.b = 0; }) (optional.just 0))
     (assertEqual (set.lookupAt [ "a" "c" ] { a.b = 0; }) optional.nothing)
   ];
+  zip = assertEqual (set.mapZip (name: function.id) [{a = "x";} {a = "y"; b = "z";}]) { a = ["x" "y"]; b = ["z"]; };
 }

@@ -39,6 +39,10 @@ rec {
   */
   getOr = default: k: s: s.${k} or default;
 
+  /* getAll :: key -> [set] -> [value]
+  */
+  getAll = builtins.catAttrs;
+
   /* lookup :: key -> set -> optional value
   */
   lookup = k: s: bool.toOptional (s ? ${k}) s.${k};
@@ -94,6 +98,15 @@ rec {
   /* mapToList :: (key -> value -> value) -> set -> set
   */
   mapToList = f: compose values (map f);
+
+  /* mapZip :: (key -> [value] -> value) -> [set] -> set
+  */
+  mapZip = let
+    zipAttrsWithNames = names: f: sets: fromList (list.map (name: {
+      _0 = name;
+      _1 = f name (getAll name sets);
+    }) names);
+  in builtins.zipAttrsWith or (f: sets: zipAttrsWithNames (list.concatMap keys sets) f sets);
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
