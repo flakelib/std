@@ -21,7 +21,7 @@ let
     then "true"
     else "false";
   showFloat = builtins.toString;
-  showFunction = types.function.show;
+  showFunction = imports.types.function.show;
   showInt = builtins.toString;
   showList = ls: "[ " + imports.string.concatSep ", " (imports.list.map showInternal ls) + " ]";
   showNull = const "null";
@@ -38,7 +38,7 @@ let
         shows = [
           { isType = builtins.isBool; showType = showBool; }
           { isType = builtins.isFloat; showType = showFloat; }
-          { isType = function.isFunction; showType = showFunction; }
+          { isType = imports.types.function.check; showType = showFunction; }
           { isType = builtins.isInt; showType = showInt; }
           { isType = builtins.isList; showType = showList; }
           { isType = builtins.isNull; showType = showNull; }
