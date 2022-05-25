@@ -10,6 +10,7 @@
     ./path.nix
     ./drv.nix
     ./set.nix
+    ./num.nix
   ];
   sectionOk = section: List.all Assert.ok (Set.values section.assertions);
   mapAssertionLine = name: assertion: "\t${name}: ${assertion}";

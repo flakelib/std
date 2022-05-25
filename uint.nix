@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Opt;
+  inherit (lib) Opt List Set Str UInt;
   inherit (lib.Std.std) num;
   inherit (num) bits;
 in {
@@ -23,8 +23,9 @@ in {
     quotRem divMod
     even odd
     fac pow gcd lcm clamp
-    toBaseDigits toHexString
+    toBaseDigits
     toFloat;
+  toHex = num.toHexString;
   inherit (builtins) sub;
   FromBaseDigits = num.fromBaseDigits;
   TryParse = x: let
@@ -40,4 +41,14 @@ in {
     else i;
   Max = num.maxInt;
   Min = 0;
+
+  toHexUpper = v: Str.toUpper (UInt.toHex v);
+  toHexLower = UInt.toHex;
+  FromHex = s: UInt.FromBaseDigits 16 (List.map UInt.FromHexDigit (Str.toChars s));
+
+  HexChars = "0123456789abcdef";
+  FromHexDigit = let
+    charsFor = str: List.imap (i: c: { _0 = c; _1 = i; }) (Str.toChars str);
+    chars = Set.fromList (charsFor UInt.HexChars ++ charsFor (Str.toUpper UInt.HexChars));
+  in d: chars.${d};
 }

@@ -20,7 +20,6 @@ in {
     quotRem divMod
     even odd
     fac pow gcd lcm clamp
-    toBaseDigits toHexString
     toFloat;
   inherit (builtins) sub;
   FromBaseDigits = num.fromBaseDigits;
