@@ -1,10 +1,11 @@
 { lib }: let
-  inherit (lib) Flake Null Rec Ty;
+  inherit (lib) Flake Null UInt Rec Ty;
 in Rec.Def {
   name = "std:Flake.Source";
   Self = Flake.Source;
   fields = {
     lastModified.type = Ty.int; # TODO: type = timestamp/int;
+    lastModifiedDate.type = Ty.str; # TODO: type = timestamp;
     narHash = {
       type = Ty.string; # TODO: type = hash
       optional = true;
@@ -12,6 +13,13 @@ in Rec.Def {
     type.type = Ty.string; # TODO: enum
     # TODO: owner repo rev dir etc optional fields
   };
+
+  fn.lastModifiedDate = si: with UInt.parseTimestamp si.lastModified; let
+    pad = v: Str.justifyRight 2 "0" (Str v);
+    ymd = Str y + pad m + pad d;
+    hms = pad hours + pad minutes + pad seconds;
+  in si.lastModifiedDate or (ymd + hms);
+
   fn.fetch = si: {
     path = builtins.path {
       inherit (si) path;

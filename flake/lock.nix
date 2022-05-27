@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Rec Set Ty;
+  inherit (lib) Flake Rec Null Bool Opt Str Fn Set List Ty;
   inherit (Flake) Lock;
 in Rec.Def {
   name = "std:Flake.Lock";
@@ -15,12 +15,38 @@ in Rec.Def {
     ${Ty.path.name} = Lock.ReadFile;
     ${Ty.attrs.name} = Lock.New;
   };
-  fn.rootNode = lock: Lock.Node.New lock.nodes.${lock.root};
-  fn.nodes = lock: Set.map (_: Lock.Node.New) lock.nodes;
+
+  fn.root = lock: (Lock.nodes lock).${lock.root};
+  fn.outputs = lock: (Lock.load lock).${lock.root};
+
+  fn.nodes.fn = lock: Set.map (name: node: Lock.Node.New (node // { inherit name lock; })) lock.nodes;
+  fn.nodes.memoize = true;
+
+  fn.sources = lock: Set.map (name: node: Opt.match (Lock.Node.fetch node) {
+    just = Fn.id;
+    nothing = throw "Flake.Lock.sources: no source for input ${name}";
+  }) (Lock.nodes lock) // lock.override.sources or { };
+
+  fn.sourceInfo.fn = lock: let
+    srcs = Lock.sources lock;
+  in Set.map (name: node: Null.default { } (Lock.Node.sourceInfo node) // {
+    outPath = srcs.${name};
+    ${Null.Iif (node ? locked.lastModified) "lastModifiedDate"} = Flake.Source.lastModifiedDate node.locked;
+  }) (Lock.nodes lock);
+  fn.sourceInfo.memoize = true;
+
+  fn.load.fn = lock: Set.map (_: Lock.Node.load) (Lock.nodes lock);
+  fn.load.memoize = true;
   # TODO: version check 5~7
 } // {
   New = Lock.TypeId.new;
-  ReadFile = path: builtins.fromJSON (builtins.readFile path);
+  LoadDir = path: let
+    data = Lock.ReadFile (path + "/flake.lock");
+  in Lock.New (data // {
+    override.sources.${data.root} = toString path;
+  });
+
+  ReadFile = path: Lock.New (builtins.fromJSON (builtins.readFile path));
 
   Node = Rec.Def {
     name = "std:Flake.Lock.Node";
@@ -43,8 +69,32 @@ in Rec.Def {
         type = Ty.attrsOf (Ty.either (Ty.listOf Ty.string) Ty.string);
         optional = true;
       };
+      lock.type = Lock.TypeId.ty;
+      name.type = Ty.string;
     };
-    fn.sourceInfo = node: node.locked or node.original;
+
+    # sourceInfo :: Flake.Lock.Node -> Nullable Flake.Source
+    fn.sourceInfo = node: node.locked or node.original or null;
+
+    # fetch :: Flake.Lock.Node -> Optional
+    fn.fetch.fn = node: Opt.map Flake.Source.fetch (Opt.fromNullable (Lock.Node.sourceInfo node));
+    fn.fetch.memoize = true;
+
+    fn.inputNames.fn = let
+      forInput = lock: spec: if Ty.string.check spec then spec else search lock lock.root spec;
+      search = lock: node: spec: if spec == [ ] then node else search lock (Lock.Node.inputNames (Lock.nodes lock).${node}).${List.head spec} (List.tail spec);
+    in node: Set.map (_: forInput node.lock) node.inputs or { };
+    fn.inputNames.memoize = true;
+
+    fn.inputs.fn = node: Set.map (_: Fn.flip Set.get (Lock.load node.lock)) (Lock.Node.inputNames node);
+    fn.inputs.memoize = true;
+    fn.outputs.fn = node: Flake.CallDir (Lock.sourceInfo node.lock).${node.name} (Lock.Node.inputs node);
+    fn.outputs.memoize = true;
+    fn.load = node: let
+      sourceInfo = (Lock.sourceInfo node.lock).${node.name};
+      outputs = Lock.Node.outputs node;
+      inputs = Lock.Node.inputs node;
+    in sourceInfo // Set.optional node.flake or true ({ inherit sourceInfo inputs outputs; } // outputs);
   } // {
     New = Lock.Node.TypeId.new;
   };

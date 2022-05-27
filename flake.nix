@@ -10,5 +10,6 @@
     checks = let
       checks = import ./checks { inherit (self) lib; };
     in if checks.ok then { } else throw checks.output.failures;
+    devShells = import ./ci/shells.nix { inherit (self) lib; };
   };
 }
