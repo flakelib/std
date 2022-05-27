@@ -19,5 +19,9 @@ in {
       exp = 30;
       val = UInt.FromHex "1E";
     };
+    timestamp = Assert.Eq {
+      exp =  { y = 2022; m = 5; d = 27; doy = 87; hours = 17; minutes = 59; seconds = 14; };
+      val = UInt.parseTimestamp 1653674354;
+    };
   };
 }
