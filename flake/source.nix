@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Null UInt Rec Ty;
+  inherit (lib) Flake Null UInt Str Rec Ty;
 in Rec.Def {
   name = "std:Flake.Source";
   Self = Flake.Source;
