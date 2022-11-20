@@ -23,7 +23,7 @@ in Rec.Def {
   fn.fetch = si: {
     path = builtins.path {
       inherit (si) path;
-      ${Null.Iif (si ? narHash) "narHash"} = si.narHash;
+      ${Null.Iif (si ? narHash) "sha256"} = si.narHash;
     };
     tarball = builtins.fetchTarball {
       inherit (si) url;
