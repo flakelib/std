@@ -22,10 +22,13 @@ in Rec.Def {
   fn.nodes.fn = lock: Set.map (name: node: Lock.Node.New (node // { inherit name lock; })) lock.nodes;
   fn.nodes.memoize = true;
 
-  fn.sources = lock: Set.map (name: node: Opt.match (Lock.Node.fetch node) {
+  fn.sources = lock: Set.map (name: node: Null.match lock.override.sources.${name} or null {
     just = Fn.id;
-    nothing = throw "Flake.Lock.sources: no source for input ${name}";
-  }) (Lock.nodes lock) // lock.override.sources or { };
+    nothing = Opt.match (Lock.Node.fetch node) {
+      just = Fn.id;
+      nothing = throw "Flake.Lock.sources: no source for input ${name}";
+    };
+  }) (Lock.nodes lock);
 
   fn.sourceInfo.fn = lock: let
     srcs = Lock.sources lock;

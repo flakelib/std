@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Set Fix;
+  inherit (lib) Flake Set List Fix Opt;
 in {
   description = Set.lookup "description";
   outputsFn = flake: flake.outputs;
@@ -30,6 +30,36 @@ in {
     locked = src: Flake.Lock.outputs (Flake.Lock.LoadDir src);
     __functor = self: self.compat;
   };
+
+  LoadWith =
+  { sources ? { }
+  , lockData ? builtins.fromJSON (builtins.readFile (path + "/flake.lock"))
+  , path
+  , defaultPackage ? "default"
+  , nixpkgsAttr ? Opt.toNullable (List.find (k: List.elem k [ "nixpkgs" "pkgs" ]) (
+      Set.keys lockData.nodes.${lockData.root}.inputs or { })
+    )
+  , pkgs ? null
+  , system ? pkgs.system or null
+  }: let
+    inherit (Flake) Lock;
+    lock = Lock.New (lockData // {
+      override.sources = {
+        ${lockData.root} = toString path;
+        ${nixpkgsAttr} =
+          if pkgs ? path then toString pkgs.path else null;
+      } // sources;
+    });
+    outputs = Lock.outputs lock;
+    systemAttrNames = [
+      "packages" "legacyPackages" "devShells" "apps" "checks"
+    ];
+    systemAttrs = Set.map (_: p: p // p.${system} or { }) (Set.retain systemAttrNames outputs) // Set.optional (nixpkgsAttr != null) {
+      pkgs = outputs.inputs.${nixpkgsAttr}.legacyPackages.${system};
+    };
+  in Set.optional (defaultPackage != null && system != null) systemAttrs.packages.${defaultPackage} or { }
+  // outputs
+  // Set.optional (system != null) systemAttrs;
 
   Source = import ./source.nix { inherit lib; };
   Outputs = import ./outputs.nix { inherit lib; };
