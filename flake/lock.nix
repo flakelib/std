@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Rec Null Bool Opt Str Fn Set List Ty;
+  inherit (lib) Flake Rec Null Bool Opt Str Fn Set List Ty Serde;
   inherit (Flake) Lock;
 in Rec.Def {
   name = "std:Flake.Lock";
@@ -49,7 +49,7 @@ in Rec.Def {
     override.sources.${data.root} = toString path;
   });
 
-  ReadFile = path: Lock.New (builtins.fromJSON (builtins.readFile path));
+  ReadFile = path: Lock.New (Serde.ReadJSON path);
 
   Node = Rec.Def {
     name = "std:Flake.Lock.Node";

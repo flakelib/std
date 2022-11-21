@@ -32,7 +32,7 @@ in {
   Fix = std.fixpoints;
   Nix = source ./nix.nix;
   Regex = std.regex // source ./regex.nix;
-  Serde = std.serde;
+  Serde = std.serde // source ./serde.nix;
 
   Applicative = std.applicative;
   Functor = std.functor;

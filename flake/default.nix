@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Set List Fix Opt;
+  inherit (lib) Flake Set List Fix Opt Serde;
 in {
   description = Set.lookup "description";
   outputsFn = flake: flake.outputs;
@@ -33,7 +33,7 @@ in {
 
   LoadWith =
   { sources ? { }
-  , lockData ? builtins.fromJSON (builtins.readFile (path + "/flake.lock"))
+  , lockData ? Serde.ReadJSON (path + "/flake.lock")
   , path
   , defaultPackage ? "default"
   , nixpkgsAttr ? Opt.toNullable (List.find (k: List.elem k [ "nixpkgs" "pkgs" ]) (
