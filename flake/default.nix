@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Set List Fix Opt Serde;
+  inherit (lib) Flake Set List Fix Opt Null Serde;
 in {
   description = Set.lookup "description";
   outputsFn = flake: flake.outputs;
@@ -60,6 +60,35 @@ in {
   in Set.optional (defaultPackage != null && system != null) systemAttrs.packages.${defaultPackage} or { }
   // outputs
   // Set.optional (system != null) systemAttrs;
+
+  Bootstrap =
+  { path
+  , lockData ? Serde.ReadJSON (path + "/flake.lock")
+  , enableSystem ? true
+  , enablePkgs ? true
+  , loadWith ? { }
+  , fn ? { outputs, ... }: outputs
+  }@args: let
+    load = {
+      inherit lockData path;
+      ${if enablePkgs then null else "nixpkgsAttr"} = null;
+    } // loadWith;
+    defaultSystem = Null.Iif enableSystem builtins.currentSystem or null;
+  in if enableSystem || enablePkgs || args ? callback then
+    { pkgs ? (builtins.tryEval (import <nixpkgs> { })).value
+    , system ? pkgs.system or builtins.currentSystem or null
+    , ...
+    }@args: fn ({
+      outputs = Flake.LoadWith ({
+        ${if enablePkgs then "pkgs" else null} = pkgs;
+        ${if enableSystem then "system" else null} =
+          if args ? system then system
+          else if args ? pkgs then pkgs.system or defaultSystem
+          else defaultSystem;
+      } // load);
+    } // args)
+  else Flake.LoadWith load;
+
 
   Source = import ./source.nix { inherit lib; };
   Outputs = import ./outputs.nix { inherit lib; };
