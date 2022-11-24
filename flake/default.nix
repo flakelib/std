@@ -41,6 +41,7 @@ in {
     )
   , pkgs ? null
   , system ? pkgs.system or null
+  , enableInputsSelf ? false
   }: let
     inherit (Flake) Lock;
     lock = Lock.New (lockData // {
@@ -58,8 +59,12 @@ in {
       pkgs = outputs.inputs.${nixpkgsAttr}.legacyPackages.${system};
     };
   in Set.optional (defaultPackage != null && system != null) systemAttrs.packages.${defaultPackage} or { }
-  // outputs
-  // Set.optional (system != null) systemAttrs;
+  // Set.without (List.optional (defaultPackage != null) "outputs") outputs
+  // Set.optional enableInputsSelf {
+    inputs = outputs.inputs // {
+      self = outputs;
+    };
+  } // Set.optional (system != null) systemAttrs;
 
   Bootstrap =
   { path
@@ -72,6 +77,7 @@ in {
     load = {
       inherit lockData path;
       ${if enablePkgs then null else "nixpkgsAttr"} = null;
+      enableInputsSelf = true;
     } // loadWith;
     defaultSystem = Null.Iif enableSystem builtins.currentSystem or null;
   in if enableSystem || enablePkgs || args ? callback then
