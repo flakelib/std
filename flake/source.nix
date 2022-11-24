@@ -5,7 +5,7 @@ in Rec.Def {
   Self = Flake.Source;
   fields = {
     lastModified.type = Ty.int; # TODO: type = timestamp/int;
-    lastModifiedDate.type = Ty.str; # TODO: type = timestamp;
+    lastModifiedDate.type = Ty.string; # TODO: type = timestamp;
     narHash = {
       type = Ty.string; # TODO: type = hash
       optional = true;

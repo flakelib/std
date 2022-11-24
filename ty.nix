@@ -114,6 +114,8 @@ in {
 
   assertion = throw "TODO";
 
+  record = Rec.TypeId.ty;
+
   dyn = Ty.mkType {
     name = "std:Dyn";
     description = "dynamically typed data";

@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Flake Drv Fn Ty;
+  inherit (lib) Flake Drv Fn Ty Str;
   inherit (Flake) App;
 in {
   ForProgram = program: App.TypeId.new {

@@ -91,6 +91,7 @@ in {
     TypeId = TypeId.new {
       ty = Ty.mkType {
         name = "std:Rec.Method";
+        description = "record set method";
         check = x: x ? fn || Ty.function.check x;
       };
     };
@@ -104,8 +105,17 @@ in {
     TypeId = TypeId.new {
       ty = Ty.mkType {
         name = "std:Rec.Field";
+        description = "record set field";
         check = Ty.attrs.check;
       };
+    };
+  };
+
+  TypeId = TypeId.new {
+    ty = Ty.mkType {
+      name = "std:Rec";
+      description = "record set";
+      check = Ty.attrs.check;
     };
   };
 }
