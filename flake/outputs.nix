@@ -13,6 +13,15 @@ in {
     "bundlers"
   ];
 
+  # WrapOverlay :: overlay -> overlay
+  # fixes overlays to help a flake pass the `nix flake check` command's strict requirements
+  WrapOverlay = overlay: let
+    # NOTE: if nix ever gets less picky, consider using builtins.nixVersion here
+    overlay' = if builtins.isPath overlay
+      then import overlay
+      else overlay;
+  in final: prev: overlay' final prev;
+
   # description :: Outputs -> Optional string
   description = Set.lookup "description";
 
