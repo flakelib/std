@@ -71,6 +71,8 @@ in {
   , lockData ? Serde.ReadJSON (path + "/flake.lock")
   , enableSystem ? true
   , enablePkgs ? true
+  , defaultSystem ? builtins.currentSystem or null
+  , defaultPkgs ? (import <nixpkgs> { })
   , loadWith ? { }
   , fn ? { outputs, ... }: outputs
   }@args: let
@@ -79,21 +81,34 @@ in {
       ${if enablePkgs then null else "nixpkgsAttr"} = null;
       enableInputsSelf = true;
     } // loadWith;
-    defaultSystem = Null.Iif enableSystem builtins.currentSystem or null;
-  in if enableSystem || enablePkgs || args ? callback then
-    { pkgs ? (builtins.tryEval (import <nixpkgs> { })).value
-    , system ? pkgs.system or builtins.currentSystem or null
+    tryPkgs = let
+      try = (builtins.tryEval defaultPkgs);
+    in if try.success then try.value else null;
+    f = {
+      pkgs ? tryPkgs
+    , system ? pkgs.system or defaultSystem
     , ...
     }@args: fn ({
       outputs = Flake.LoadWith ({
-        ${if enablePkgs then "pkgs" else null} = pkgs;
-        ${if enableSystem then "system" else null} =
-          if args ? system then system
+        pkgs = Null.Iif enablePkgs pkgs;
+        system =
+          if !enableSystem then null
+          else if args ? system then system
           else if args ? pkgs then pkgs.system or defaultSystem
           else defaultSystem;
       } // load);
-    } // args)
-  else Flake.LoadWith load;
+    } // args);
+    outputs = Flake.LoadWith load;
+  in {
+    inherit outputs;
+    inherit (outputs) sourceInfo outPath;
+    inputs = outputs.inputs // {
+      self = outputs;
+    };
+    __functor = self:
+      if enableSystem || enablePkgs || args ? fn then f
+      else { ... }@args: fn ({ inherit outputs; } // args);
+  };
 
 
   Source = import ./source.nix { inherit lib; };
