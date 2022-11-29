@@ -2,7 +2,7 @@
   inherit (lib) Enum List Set Opt Str Fn Ty;
   inherit (Ty) TypeId;
   mapVarName = var:
-    if Ty.null.check var then Ty.show var
+    if Ty.null.check var then Ty.Show var
     else toString var;
 in {
   Def = {
@@ -21,7 +21,7 @@ in {
       inherit name;
       ty = Ty.mkType {
         inherit name;
-        description = if description != null then description else "enum of ${Str.concatMapSep ", " Ty.show values}";
+        description = if description != null then description else "enum of ${Str.concatMapSep ", " Ty.Show values}";
         show = if show != null then show else Enum.toString Self';
         check = x: toString (TypeId.Of x) == Self'.TypeId.name || List.elem x Self'.TypeId.meta.Values;
       };

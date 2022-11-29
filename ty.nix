@@ -5,6 +5,7 @@
   firstType = fallback: types: x: (List.find (t: t.check x) types).value or fallback;
 in {
   show = Ty.any.show;
+  Show = Ty.show;
 
   string = std.types.string // {
     show = Str.escapeNixString;

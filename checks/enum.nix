@@ -38,7 +38,7 @@ in {
     };
     /*show-dyn = Assert.Eq { # TODO: enum tagging
       exp = "${MyEnum.TypeId.name}.None";
-      val = Ty.show (Enum.tag MyEnum MyEnum.None);
+      val = Ty.Show (Enum.tag MyEnum MyEnum.None);
     };*/
   };
 }

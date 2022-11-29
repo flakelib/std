@@ -72,7 +72,7 @@ in {
       exp = 1;
     };*/
     show = Assert.Eq {
-      val = Ty.show MyRec.Default;
+      val = Ty.Show MyRec.Default;
       exp = "${MyRec.TypeId.name}{ value = ${toString MyRec.Default.value}; }";
     };
   };

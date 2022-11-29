@@ -11,7 +11,7 @@
       ${Self.TypeId.name} = Fn.id;
     } // coerce;
   in if Ty.function.check coerce then Self: coerce
-    else Self: value: lookup.${toString (TypeId.For value)} or (_: throw "${Self.TypeId.name}: unknown coercion from ${Ty.show value}") value;
+    else Self: value: lookup.${toString (TypeId.For value)} or (_: throw "${Self.TypeId.name}: unknown coercion from ${Ty.Show value}") value;
 in {
   Def = {
     name

@@ -11,7 +11,7 @@ in {
   From = v: if Ty.pathlike.check v then App.ForProgram v
     else if Ty.drv.check v then App.ForDrv v
     else if App.TypeId.ty.check v then v
-    else throw "std.Flake.App: cannot convert ${Ty.show v}";
+    else throw "std.Flake.App: cannot convert ${Ty.Show v}";
 
   __functor = App: App.From;
 

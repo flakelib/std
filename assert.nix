@@ -33,14 +33,14 @@ in {
     res = Cmp.Compare exp val;
   in Assert.New ({
     eval = cmp res;
-    msg = "failed: ${Ty.show val} ${Cmp.sign res} ${Ty.show exp}";
+    msg = "failed: ${Ty.Show val} ${Cmp.sign res} ${Ty.Show exp}";
   } // Set.without [ "val" "exp" "cmp" ] args);
 
   Throws = { val, ... }@args: let
     try = builtins.tryEval val;
   in Assert.New ({
     eval = !try.success;
-    msg = "expected failure, got ${Ty.show try.value}";
+    msg = "expected failure, got ${Ty.Show try.value}";
   } // Set.without [ "val" ] args);
 
   All = asserts: Assert.New {

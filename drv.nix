@@ -9,7 +9,7 @@ in {
   nameOf = d:
     if Ty.drv.check d then d.name
     else if Drv.isPath d then (Drv.nameWithPath d)
-    else throw "unknown program ${Ty.show d}";
+    else throw "unknown program ${Ty.Show d}";
 
   parsedNameOf = d: builtins.parseDrvName (Drv.nameOf d);
 
