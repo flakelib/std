@@ -22,6 +22,14 @@ in {
       else overlay;
   in final: prev: overlay' final prev;
 
+  # WrapModule :: module -> module
+  # fixes modules to help a flake pass the `nix flake check` command's strict requirements
+  WrapModule = module:
+    if builtins.isFunction module then module
+    else { ... }: {
+      imports = [ module ];
+    };
+
   # description :: Outputs -> Optional string
   description = Set.lookup "description";
 
