@@ -1,16 +1,32 @@
 { lib }: let
-  inherit (lib) Assert Set List Str Cmp Ty;
+  inherit (lib)
+    Assert Nix
+    Set List Str Bool Opt Cmp Fn Ty;
 in {
-  throwOr = assertion: value:
-    if assertion.eval then value
-    else throw "${assertion.name} ${assertion.msg}";
+  throwOr = assertion: value: Opt.match (Assert.toOptional assertion value) {
+    just = Fn.id;
+    nothing = throw (Assert.failedString assertion);
+  };
 
-  toString = assertion:
-    if assertion.eval then "${assertion.name} ok"
-    else "${assertion.name} ${assertion.msg}";
+  warn = assertion: value: Opt.match (Assert.failedString assertion) {
+    just = Fn.flip Nix.Warn value;
+    nothing = value;
+  };
+
+  toOptional = assertion: v: Bool.toOptional (Assert.ok assertion) v;
+
+  toString = assertion: Opt.match (Assert.toFailedString assertion) {
+    just = Fn.id;
+    nothing = Assert.okString assertion;
+  };
+
+  toFailedString = assertion: Bool.toOptional (Assert.failed assertion) (Assert.failedString assertion);
 
   ok = assertion: assertion.eval;
   failed = assertion: ! assertion.eval;
+
+  okString = assertion: "${assertion.name} ok";
+  failedString = assertion: "${assertion.name} ${assertion.msg}";
 
   True = { val, ... }@args: Assert.New ({
     eval = val;
