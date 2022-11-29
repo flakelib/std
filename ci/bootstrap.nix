@@ -8,6 +8,7 @@ let
   std = import nix-std;
   lib = import ../lib.nix {
     inherit lib std;
+    sourceInfo.outPath = ./.;
   };
 in {
   inherit std lib;

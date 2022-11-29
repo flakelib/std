@@ -2,4 +2,5 @@
   inherit (lib) Std;
 in {
   inherit (Std.std) version;
+  inherit lib;
 }

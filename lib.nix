@@ -1,4 +1,4 @@
-{ lib, std }: let
+{ lib, std, sourceInfo }: let
   inherit (lib) Ty;
   source = path: import path { inherit lib; };
   ty = type: {
@@ -42,5 +42,6 @@ in {
 
   Std = {
     inherit std;
+    outPath = sourceInfo;
   } // source ./std.nix;
 }
