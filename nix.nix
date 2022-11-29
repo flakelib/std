@@ -1,6 +1,31 @@
 { lib }: let
-  inherit (lib) Str Regex Set List Nix;
+  inherit (lib) Nix Str Regex Set List Bool Fn Ty;
+  inherit (Str) AnsiSGR;
 in {
+  Seq = builtins.seq;
+  SeqDeep = builtins.deepSeq;
+
+  Print = builtins.trace;
+  PrintDeep = value: builtins.trace (Nix.SeqDeep value);
+  Warn = msg: Nix.Print (AnsiSGR.wrap [ AnsiSGR.Red AnsiSGR.Bold ] "WARN: ${msg}");
+  WarnIf = cond: msg: value: Bool.Iif cond (Nix.Warn msg value) value;
+  Info = msg: Nix.Print "${AnsiSGR.wrap [ AnsiSGR.Blue ] "INFO:"} ${msg}";
+  TODO = msg: Nix.Print "${AnsiSGR.wrap [ AnsiSGR.Cyan AnsiSGR.Bold ] "TODO:"} ${msg}";
+
+  # Trace :: a -> a
+  # Prints a (usually shallow) debug view of `a`, then returns it.
+  Trace = Nix.TraceMap Fn.id;
+  # TraceMap :: f -> a -> a
+  # Prints `f a`, then returns the unmodified `a`.
+  TraceMap = f: value: Nix.Print (f value) value;
+
+  # Show :: a -> a
+  # Prints `Ty.Show a`, then returns `a`.
+  Show = Nix.ShowMap Fn.id;
+  # ShowMap :: f -> a -> a
+  # Prints `Ty.Show (f a)`, then returns `a`.
+  ShowMap = f: Nix.TraceMap (v: Ty.Show (f v));
+
   inherit (builtins) storeDir;
 
   tupleToPair = { _0, _1 }: { name = _0; value = _1; };
