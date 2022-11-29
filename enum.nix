@@ -1,5 +1,5 @@
 { lib }: let
-  inherit (lib) Enum List Set Opt Str Fn Ty;
+  inherit (lib) Enum Nix List Set Opt Str Fn Ty;
   inherit (Ty) TypeId;
   mapVarName = var:
     if Ty.null.check var then Ty.Show var
@@ -52,7 +52,13 @@ in {
 
   nameOfValue = Self: v: Opt.map (List.elemAt Self.TypeId.meta.Names) (List.findIndex (x: x == v) Self.TypeId.meta.Values);
 
-  TypeId = throw "TODO";
+  TypeId = Nix.TODO "Enum.TypeId" Ty.TypeId.new {
+    ty = Ty.mkType {
+      name = "std:Enum";
+      description = "enum";
+      check = _: true;
+    };
+  };
 
   Of = Ty.enum;
 }

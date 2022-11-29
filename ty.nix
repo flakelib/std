@@ -1,6 +1,6 @@
 { lib }: let
   inherit (lib.Std) std;
-  inherit (lib) Ty Fn Opt Null Set List Rec Str Cmp;
+  inherit (lib) Ty Assert Fn Opt Null Set List Rec Str Cmp;
   showKeyValue = show: k: v: "${k} = ${show v}; ";
   firstType = fallback: types: x: (List.find (t: t.check x) types).value or fallback;
 in {
@@ -113,7 +113,7 @@ in {
     show = x: "${x.realPart}+${x.imagPart}i";
   });
 
-  assertion = throw "TODO";
+  assertion = Assert.TypeId.ty;
 
   record = Rec.TypeId.ty;
 
@@ -164,7 +164,7 @@ in {
     new = {
       name ? ty.name
     , ty
-    , new ? throw "${name}.new unsupported"
+    , new ? _: throw "${name}.new unsupported"
     , meta ? { }
     }: {
       inherit ty new meta name __toString;

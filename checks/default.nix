@@ -1,5 +1,5 @@
 { lib ? import ../default.nix }: let
-  inherit (lib) Assert Set Str List Fn;
+  inherit (lib) Assert Nix Set Str List Fn;
   importCheck = file: (import file { inherit lib; });
   checks = List.map importCheck [
     ./rec.nix
@@ -18,7 +18,7 @@
   lines = List.concatMap sectionLines checks;
   failures = List.filter (Fn.not sectionOk) checks;
   failureLines = section: List.singleton section.name ++ Set.mapToList mapAssertionLine (Set.filter (_: Fn.not Assert.ok) section.assertions);
-in {
+in Nix.SeqDeep (Set.without [ "Std" ] lib) {
   ok = List.all sectionOk checks;
   output = {
     all = Str.unlines (List.concatMap sectionLines checks);
