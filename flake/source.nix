@@ -1,5 +1,21 @@
 { lib }: let
   inherit (lib) Flake Null UInt Str Rec Ty;
+  fetchUrl = {
+    outputHashAlgo ? ""
+  , outputHash ? ""
+  , name ? "source"
+  , url
+  }: derivation {
+    # simulate <nix/fetchurl.nix>, but "recursive" hash a single file
+    builder = "builtin:fetchurl";
+    system = "builtin";
+    inherit name url outputHash outputHashAlgo;
+    outputHashMode = "recursive";
+    preferLocalBuild = true;
+    urls = [ url ];
+    unpack = false;
+    executable = false;
+  };
 in Rec.Def {
   name = "std:Flake.Source";
   Self = Flake.Source;
@@ -20,10 +36,19 @@ in Rec.Def {
     hms = pad hours + pad minutes + pad seconds;
   in si.lastModifiedDate or (ymd + hms);
 
-  fn.fetch = si: {
+  fn.fetch = si: let
+    unsupported = throw "Flake.Source.fetch: unsupported type ${si.type}";
+  in {
     path = builtins.path {
       inherit (si) path;
       ${Null.Iif (si ? narHash) "sha256"} = si.narHash;
+    };
+    file = if Str.hasPrefix "file://" si.url then builtins.path {
+      path = Str.removePrefix "file:/" si.url;
+      ${Null.Iif (si ? narHash) "sha256"} = si.narHash;
+    } else fetchUrl {
+      inherit (si) url;
+      ${Null.Iif (si ? narHash) "outputHash"} = si.narHash;
     };
     tarball = builtins.fetchTarball {
       inherit (si) url;
@@ -44,7 +69,7 @@ in Rec.Def {
       ${Null.Iif (si ? narHash) "sha256"} = si.narHash;
     };
     # TODO: fetchMercurial
-  }.${si.type} or (throw "Flake.Source.fetch: unsupported type ${si.type}");
+  }.${si.type} or unsupported;
 } // {
   New = Flake.Source.TypeId.new;
 }
