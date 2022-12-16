@@ -113,9 +113,10 @@ in {
     show = x: "${x.realPart}+${x.imagPart}i";
   });
 
-  assertion = Assert.TypeId.ty;
+  assertion = lib.Assert.TypeId.ty;
+  record = lib.Rec.TypeId.ty;
+  system = lib.System.TypeId.ty;
 
-  record = Rec.TypeId.ty;
 
   dyn = Ty.mkType {
     name = "std:Dyn";

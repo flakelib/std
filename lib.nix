@@ -1,47 +1,152 @@
 { lib, std, sourceInfo }: let
+  optSet = cond: attrs: if cond then attrs else { }; # std.set.optional
   inherit (lib) Ty;
+  modules = {
+    Bool = {
+      src = ./bool.nix;
+      upstream = std.bool;
+      type = Ty.bool;
+    };
+    Drv = {
+      src = ./drv.nix;
+      type = Ty.drv;
+    };
+    Flake = {
+      src = ./flake;
+      type = Ty.flake;
+    };
+    Fn = {
+      src = ./fn.nix;
+      upstream = std.function;
+      type = Ty.function;
+    };
+    List = {
+      src = ./list.nix;
+      upstream = std.list;
+      type = Ty.list;
+      typeOf = Ty.listOf;
+      attrs = {
+        NonEmptyOf = Ty.nonEmptyListOf;
+      };
+    };
+    NonEmpty = {
+      src = ./nonempty.nix;
+      upstream = std.nonempty;
+    };
+    Null = {
+      src = ./null.nix;
+      upstream = std.nullable;
+      type = Ty.null;
+      typeOf = Ty.nullOr;
+    };
+    Int = {
+      src = ./int.nix;
+      type = Ty.int;
+    };
+    UInt = {
+      src = ./uint.nix;
+      type = Ty.u32;
+    };
+    Float = {
+      src = ./float.nix;
+      type = Ty.float;
+    };
+    Complex = {
+      src = ./complex.nix;
+      type = Ty.complex;
+    };
+    Opt = {
+      src = ./opt.nix;
+      upstream = std.optional;
+      type = Ty.opt;
+      typeOf = Ty.optOf;
+    };
+    Path = {
+      src = ./path.nix;
+      type = Ty.path;
+    };
+    Set = {
+      src = ./set.nix;
+      upstream = std.set;
+      type = Ty.attrs;
+      typeOf = Ty.attrsOf;
+    };
+    Str = {
+      src = ./str.nix;
+      upstream = std.string;
+      type = Ty.string;
+    };
+    System = {
+      src = ./system.nix;
+      type = Ty.system;
+    };
+    Ty = {
+      src = ./ty.nix;
+      upstream = std.types;
+    };
+
+    Assert = {
+      src = ./assert.nix;
+      type = Ty.assertion;
+    };
+    Cmp = {
+      src = ./cmp.nix;
+      type = Ty.compare;
+    };
+    Rec = {
+      src = ./rec.nix;
+      type = Ty.record;
+    };
+    Enum = {
+      src = ./enum.nix;
+    };
+
+    Fix = {
+      upstream = std.fixpoints;
+    };
+    Nix = {
+      src = ./nix.nix;
+    };
+    Regex = {
+      src = ./regex.nix;
+      upstream = std.regex;
+    };
+    Serde = {
+      src = ./serde.nix;
+      upstream = std.serde;
+    };
+
+    Applicative.upstream = std.applicative;
+    Functor.upstream = std.functor;
+    Monad.upstream = std.monad;
+    Monoid.upstream = std.monoid;
+    Semigroup.upstream = std.semigroup;
+
+    Std = {
+      src = ./std.nix;
+      attrs = {
+        inherit std;
+        outPath = sourceInfo;
+      };
+    };
+  };
   source = path: import path { inherit lib; };
   ty = type: {
     inherit (type) show check;
     Type = type;
   };
-in {
-  Bool = std.bool // ty Ty.bool // source ./bool.nix;
-  Drv = ty Ty.drv // source ./drv.nix;
-  Flake = ty Ty.flake // source ./flake;
-  Fn = std.function // ty Ty.function // source ./fn.nix;
-  List = std.list // ty Ty.list // source ./list.nix;
-  NonEmpty = std.nonempty // ty Ty.nonEmptyList // source ./nonempty.nix;
-  Null = std.nullable // ty Ty.null // source ./null.nix;
-  Int = ty Ty.int // source ./int.nix;
-  UInt = ty Ty.u32 // source ./uint.nix;
-  Float = ty Ty.float // source ./float.nix;
-  Complex = ty Ty.complex // source ./complex.nix;
-  Opt = std.optional // source ./opt.nix;
-  Path = ty Ty.path // source ./path.nix;
-  Set = std.set // ty Ty.attrs // source ./set.nix;
-  Str = std.string // ty Ty.string // source ./str.nix;
-  System = source ./system.nix;
-  Ty = std.types // source ./ty.nix;
-
-  Assert = ty Ty.assertion // source ./assert.nix;
-  Cmp = ty Ty.compare // source ./cmp.nix;
-  Rec = ty Ty.record // source ./rec.nix;
-  Enum = source ./enum.nix;
-
-  Fix = std.fixpoints;
-  Nix = source ./nix.nix;
-  Regex = std.regex // source ./regex.nix;
-  Serde = std.serde // source ./serde.nix;
-
-  Applicative = std.applicative;
-  Functor = std.functor;
-  Monad = std.monad;
-  Monoid = std.monoid;
-  Semigroup = std.semigroup;
-
-  Std = {
-    inherit std;
-    outPath = sourceInfo;
-  } // source ./std.nix;
-}
+  tyOf = Of: {
+    inherit Of;
+  };
+  mapMod = {
+    upstream ? { }
+  , without ? [ ]
+  , src ? null
+  , type ? null, typeOf ? null
+  , attrs ? { }
+  }@args: builtins.removeAttrs upstream without
+    // optSet (args ? type) (ty type)
+    // optSet (args ? typeOf) (tyOf type)
+    // optSet (args ? src) (source src)
+    // attrs;
+in builtins.mapAttrs (_: mapMod) modules
