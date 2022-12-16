@@ -1,6 +1,15 @@
 { lib }: let
-  inherit (lib) Str List Ty;
+  inherit (lib.Std.std) string;
+  inherit (lib) Str List Bool Opt Fn Ty;
+  inherit (Fn) const;
 in {
+  # backcompat
+  index = string.unsafeIndex;
+  head = string.unsafeHead;
+  tail = string.unsafeTail;
+  init = string.unsafeInit;
+  last = string.unsafeLast;
+
   From = toString;
 
   __functor = Str: Str.From;
@@ -114,4 +123,30 @@ in {
       };
     };
   };
+
+
+  # https://github.com/chessai/nix-std/pull/56
+  convert = let
+    typecheck = {
+      path = const true;
+      string = const true;
+      null = const true;
+      int = const true;
+      float = const true;
+      bool = const true;
+      list = List.all canConvert;
+      set = Fn.compose Opt.isJust Str.coerce;
+    };
+    canConvert = x: typecheck.${builtins.typeOf x} or (const false) x;
+  in x: Bool.toOptional (canConvert x) (Str.unsafeConvert x);
+  unsafeConvert = toString;
+  coerce = let
+    typecheck = {
+      path = const true;
+      string = const true;
+      set = x: x ? outPath || x ? __toString;
+    };
+    canCoerce = x: typecheck.${builtins.typeOf x} or (const false) x;
+  in x: Bool.toOptional (canCoerce x) (Str.unsafeCoerce x);
+  unsafeCoerce = builtins.substring 0 (-1);
 }

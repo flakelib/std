@@ -1,6 +1,15 @@
 { lib }: let
+  inherit (lib.Std.std) list;
   inherit (lib) List Opt Ty;
 in {
+  # backcompat
+  head = list.unsafeHead;
+  tail = list.unsafeTail;
+  init = list.unsafeInit;
+  last = list.unsafeLast;
+  elemAt = list.unsafeIndex;
+  index = list.unsafeIndex;
+
   foldl = List.foldl';
 
   Nil = List.nil;

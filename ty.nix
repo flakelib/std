@@ -1,64 +1,25 @@
 { lib }: let
   inherit (lib.Std) std;
-  inherit (lib) Ty Assert Fn Opt Null Set List Rec Str Cmp;
+  inherit (lib)
+    Ty Fn Bool Opt Null
+    Set List NonEmpty Str Cmp;
   showKeyValue = show: k: v: "${k} = ${show v}; ";
-  firstType = fallback: types: x: (List.find (t: t.check x) types).value or fallback;
+  findType = types: x: (NonEmpty.foldl'
+    (c: n: if n.check x then n else c)
+    types);
+  OfTypes = {
+    types
+  , fallback ? Fn.const Ty.any
+  }: x: let
+    types' = types.${Ty.PrimitiveNameOf x} or (NonEmpty.singleton (fallback x));
+  in findType types' x;
 in {
-  show = Ty.any.show;
-  Show = Ty.show;
+  # backcompat
+  show = Ty.Show;
+  of = Ty.Of;
 
-  string = std.types.string // {
-    show = Str.escapeNixString;
-  };
-
-  stringlike = Ty.mkType {
-    name = "stringlike";
-    description = "stringlike";
-    check = x: Ty.string.check x || x ? __toString; # TODO: consider `outPath`?
-  };
-
-  attrs = std.types.attrs // {
-    inherit (Ty.attrsOf Ty.any) show;
-  };
-
-  list = std.types.list or (Ty.mkType {
-    name = "list";
-    description = "list";
-    check = builtins.isList;
-  }) // {
-    inherit (Ty.listOf Ty.any) show;
-  };
-
-  listOf = type: std.types.listOf type // {
-    show = l: "[ ${Str.concatSep ", " (List.map type.show l)} ]";
-  };
-
-  attrsOf = std.types.attrsOf or (type: Ty.mkType {
-    name = "{${type.name}}";
-    description = "attrs of ${type.description}";
-    check = x: Ty.attrs.check x && List.all type.check (Set.values x);
-    show = x: "{ ${Str.concat (Set.mapToList (showKeyValue type.show) x)}}";
-  });
-
-  any = Ty.mkType {
-    name = "any";
-    description = "anything";
-    check = Fn.const true;
-    show = x: (Ty.of x).show x;
-  };
-
-  pathlike = std.types.path // {
-    name = "pathlike";
-    description = "path string";
-    check = x: Str.is x && Str.substring 0 1 (Str x) == "/";
-  };
-
-  path = Ty.mkType {
-    name = "path";
-    description = "path";
-    check = builtins.isPath;
-    show = toString;
-  };
+  Show = Ty.any.show;
+  PrimitiveNameOf = builtins.typeOf;
 
   flakeInput = Ty.mkType {
     name = "flakeinput";
@@ -97,13 +58,6 @@ in {
     };
   });
 
-  nonEmptyList = std.types.nonEmptyList or (Ty.mkType {
-    name = "NonEmpty";
-    description = "non-empty list";
-    check = x: Ty.list.check x && x != [];
-  });
-  nonEmpty = Ty.nonEmptyList;
-
   compare = Ty.enum [ Cmp.LessThan Cmp.Equal Cmp.GreaterThan ];
 
   complex = std.types.complex or (Ty.mkType {
@@ -117,6 +71,9 @@ in {
   record = lib.Rec.TypeId.ty;
   system = lib.System.TypeId.ty;
 
+  any = Ty.any' // {
+    show = x: (Ty.Of x).show x;
+  };
 
   dyn = Ty.mkType {
     name = "std:Dyn";
@@ -132,30 +89,28 @@ in {
     show = x: "TypeId(${x.name})";
   };
 
-  primitiveNameOf = builtins.typeOf;
+  Of = OfTypes {
+    fallback = Ty.of';
+    types = {
+      set = NonEmpty.make Ty.attrs [
+        Ty.dyn
+        Ty.stringlike
+        Ty.function
+        Ty.drv
+        Ty.flakeInput
+        Ty.opt
+        Ty.complex
+      ];
+      string = NonEmpty.make Ty.string [
+        Ty.dyn
+        Ty.pathlike
+      ];
+    };
+  };
 
-  of = x: {
-    int = Ty.int;
-    float = Ty.float;
-    list = Ty.list;
-    bool = Ty.bool;
-    null = Ty.null;
-    lambda = Ty.function;
-    set = firstType Ty.attrs [
-      Ty.dyn
-      Ty.function
-      Ty.drv
-      Ty.flakeInput
-      Ty.opt
-      Ty.complex
-    ] x;
-    string = firstType Ty.string [ Ty.dyn /*Ty.pathlike*/ ] x;
-    path = Ty.path;
-  }.${Ty.primitiveNameOf x} or (throw "unknown nix type ${builtins.typeOf x}");
-
-  of' = x: let
+  Of' = x: let
     ty = Ty.of x;
-  in if ty == Ty.drv then (Ty.TypeId.Of x).ty else ty;
+  in if ty == Ty.dyn then (Ty.TypeId.Of x).ty else ty;
 
   TypeId = let
     inherit (Ty) TypeId;
@@ -199,7 +154,7 @@ in {
 
       throw = typeid: x: Opt.match (TypeId.tag.opt typeid x) {
         just = Fn.id;
-        nothing = throw "${TypeId.name}: unsupported tag type ${builtins.typeOf x}";
+        nothing = throw "${TypeId.name}: unsupported tag type ${Ty.PrimitiveNameOf x}";
       };
 
       try = typeid: x: Opt.match (TypeId.tag.opt typeid x) {
@@ -222,4 +177,72 @@ in {
       just = Fn.id;
     };
   };
+
+  # https://github.com/chessai/nix-std/pull/40
+  function = Ty.mkType {
+    name = "function";
+    description = "function";
+    check = f: Ty.lambda.check f || Ty.functionSet.check f;
+    show = f: let
+      args = Fn.args f;
+      showArg = k: isOptional: Bool.ifThenElse isOptional "${k} ? «code»" k;
+      body = Str.intercalate ", " (Set.mapToValues showArg args);
+      withArgs = "{ " + body + " }: «code»";
+    in Bool.ifThenElse (args == { }) "«lambda»" withArgs;
+  };
+  lambda = Ty.mkType {
+    name = "lambda";
+    description = "lambda function";
+    check = builtins.isFunction;
+    inherit (Ty.function) show;
+  };
+  functionSet = Ty.mkType {
+    name = "function ${Ty.attrs.name}";
+    description = "callable ${Ty.attrs.description} function";
+    check = f: f ? __functor && Ty.function.check f.__functor && Ty.function.check (f.__functor f);
+    inherit (Ty.function) show;
+  };
+
+  # https://github.com/chessai/nix-std/pull/56
+  string = std.types.string // {
+    show = Str.escapeNixString;
+  };
+  stringlike = Ty.mkType {
+    name = "stringlike";
+    description = "stringlike";
+    check = Fn.compose Opt.isJust Str.coerce;
+    inherit (Ty.string) show;
+  };
+  path = std.types.path // {
+    check = builtins.isPath;
+    show = builtins.toString;
+  };
+  pathlike = let
+    check = x: Str.substring 0 1 (toString x) == "/";
+  in Ty.mkType {
+      name = "pathlike";
+      description = "a pathlike string";
+      show = builtins.toString;
+      check = x: Ty.stringlike.check x && check x;
+    };
+
+  # https://github.com/chessai/nix-std/pull/54
+  of' = let
+    types = Set.map (_: NonEmpty.singleton) {
+      inherit (Ty) bool float int null list path lambda;
+    } // {
+      set = NonEmpty.make Ty.attrs [
+        Ty.functionSet
+      ];
+      string = NonEmpty.make Ty.string [
+        Ty.pathlike
+      ];
+    };
+  in std.types.of or (OfTypes { inherit types; });
+  any' = std.types.any or (Ty.mkType {
+    name = "any";
+    description = "anything";
+    check = Fn.const true;
+    show = x: (Ty.of' x).show x;
+  });
 }

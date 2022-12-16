@@ -1,6 +1,6 @@
 {
   inputs = {
-    nix-std.url = "github:flakelib/std/master";
+    nix-std.url = "github:chessai/nix-std";
   };
   outputs = { self, nix-std, ... }: {
     lib = import ./lib.nix {

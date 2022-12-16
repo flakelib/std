@@ -26,12 +26,15 @@
       type = Ty.list;
       typeOf = Ty.listOf;
       attrs = {
+        NonEmpty = Ty.nonEmptyList;
         NonEmptyOf = Ty.nonEmptyListOf;
       };
     };
     NonEmpty = {
       src = ./nonempty.nix;
       upstream = std.nonempty;
+      type = Ty.nonEmpty;
+      typeOf = Ty.nonEmptyOf;
     };
     Null = {
       src = ./null.nix;

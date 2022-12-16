@@ -10,7 +10,7 @@
       nix flake update ./ci
     '';
   in {
-    default = pkgs.mkShell {
+    default = pkgs.mkShellNoCC {
       nativeBuildInputs = [ update ];
     };
   };

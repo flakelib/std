@@ -1,11 +1,7 @@
 { lib }: let
-  inherit (lib) Fn Set Bool List;
+  inherit (lib) Fn Set Bool List Ty;
 in {
-  toLambda = f: if Fn.isFunctor f then f.__functor f else f;
-
-  toSet = Fn.toFunctor;
-
-  not = f: arg: ! f arg;
+  toLambda = f: if Ty.functionSet.check f then f.__functor f else f;
 
   pipe = List.foldl' (Fn.flip Fn.compose) Fn.id;
 
@@ -45,7 +41,17 @@ in {
     inherit override;
     ${Bool.toNullable (value ? overrideAttrs) "overrideAttrs"} = overrideAttrs override;
     # TODO: overrideDerivation?
-  } else if Fn.check value then Fn.toFunctor value // {
+  } else if Fn.check value then Fn.toSet value // {
     inherit override;
   } else value;
+
+  # https://github.com/chessai/nix-std/pull/39
+  args = f:
+    if f ? __functor then f.__functionArgs or (Fn.args (f.__functor f))
+    else builtins.functionArgs f;
+  setArgs = args: f: Set.assign "__functionArgs" args (Fn.toSet f);
+  copyArgs = src: dst: Fn.setArgs (Fn.args src) dst;
+  toSet = f: if Ty.lambda.check f then {
+    __functor = self: f;
+  } else f;
 }

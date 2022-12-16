@@ -1,42 +1,13 @@
 { lib }: let
+  inherit (lib.Std.std) set;
   inherit (lib) Set List Bool Opt Fn Ty;
 in {
-  /* assignAt :: [key] -> value -> set -> set
-  */
-  assignAt = path: v: r: let
-    k = List.head path;
-    next = Set.assignAt (List.tail path) v (r.${k} or { });
-  in if path == List.nil then v
-    else Set.assign k next r;
-
-  /* get :: key -> set -> value
-  */
-  get = k: s: s.${k};
-
-  /* getOr :: default -> key -> set -> value
-  */
-  getOr = default: k: s: s.${k} or default;
-
-  /* lookup :: key -> set -> optional value
-  */
-  lookup = k: s: Bool.toOptional (s ? ${k}) s.${k};
-
-  /* lookupAt :: [key] -> set -> optional value
-  */
-  lookupAt = path: s: List.foldl' (s: k:
-    Opt.monad.bind s (Set.lookup k)
-  ) (Opt.just s) path;
-
-  /* at :: [key] -> set -> value
-  */
-  at = path: s: List.foldl' (Fn.flip Set.get) s path;
-
-  /* atOr :: default -> [key] -> set -> value
-  */
-  atOr = default: path: s: Opt.match (Set.lookupAt path s) {
-    nothing = default;
-    just = Fn.id;
-  };
+  # backcompat
+  get = set.unsafeGet;
+  at = set.unsafeAt;
+  lookup = set.get;
+  lookupAt = set.at;
+  mapToList = set.mapToValues;
 
   update = Set.semigroup.append;
 
@@ -80,6 +51,4 @@ in {
   merge = sets: Set.mergeWith {
     inherit sets;
   };
-
-  Of = Ty.attrsOf;
 }
