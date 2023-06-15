@@ -1,6 +1,6 @@
 { lib }: let
   inherit (lib.Std.std) string;
-  inherit (lib) Str List Bool Opt Fn Ty;
+  inherit (lib) Str List Bool Opt Fn Ty Nix;
   inherit (Fn) const;
 in {
   # backcompat
@@ -16,7 +16,7 @@ in {
 
   toSet = str:  { __toString = _: str; };
 
-  raw = builtins.unsafeDiscardStringContext;
+  raw = Nix.discardContext;
 
   is = x: List.elem (Ty.primitiveNameOf x) [ "path" "string" "null" "int" "float" "bool" ]
     || (Ty.list.check x && List.all Str.is x)

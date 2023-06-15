@@ -57,10 +57,20 @@ in {
   addContextFrom = context: str: Str.substring 0 0 context + str;
 
   getContext = builtins.getContext;
+  discardContext = builtins.unsafeDiscardStringContext;
 
-  setContext = context: str: let
-    str' = builtins.unsafeDiscardStringContext str;
-    # TODO: builtins.appendContext exists for this
-    # TODO: smuggle data into this using `{ outputs = [ (toJSON xxx) ]; }` as the context data
-  in List.foldl' (str: cx: Nix.addContextFrom "${import cx}" str) str' (Set.keys context); # TODO: preserve context outputs
+  appendContext = let
+    contextToString = key: cx: let
+      drv = import key;
+    in if cx.path or false == true then "${/. + key}"
+      else if cx ? outputs then Str.concatMap (Fn.flip Set.unsafeGet drv) cx.outputs
+      else throw "unknown context type for ${key}: ${toString (Set.keys cx)}";
+    appendContext' = str: context: let
+      context' = Set.mapToValues contextToString context;
+    in List.foldl' (Fn.flip Nix.addContextFrom) str context';
+  in Fn.flip (builtins.appendContext or appendContext');
+
+  # TODO: smuggle data into this using `{ outputs = [ (toJSON xxx) ]; }` as the context data?
+  # alternatively: `"${discardContext builtins.toFile json}".path = true`
+  setContext = context: str: Nix.appendContext context (Nix.discardContext str);
 }
