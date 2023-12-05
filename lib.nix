@@ -66,6 +66,7 @@
     };
     Path = {
       src = ./path.nix;
+      upstream = std.path;
       type = Ty.path;
     };
     Set = {

@@ -2,11 +2,11 @@
   "nodes": {
     "nix-std": {
       "locked": {
-        "lastModified": 1671170529,
-        "narHash": "sha256-015C6x3tZMEd83Vd2rpfLC86PSRJrbUca1U3Rysranw=",
+        "lastModified": 1701658249,
+        "narHash": "sha256-KIt1TUuBvldhaVRta010MI5FeQlB8WadjqljybjesN0=",
         "owner": "chessai",
         "repo": "nix-std",
-        "rev": "3b307d64ef7d7e8769d36b8c8bf33983efd1415a",
+        "rev": "715db541ffff4194620e48d210b76f73a74b5b5d",
         "type": "github"
       },
       "original": {

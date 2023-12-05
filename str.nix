@@ -123,30 +123,4 @@ in {
       };
     };
   };
-
-
-  # https://github.com/chessai/nix-std/pull/56
-  convert = let
-    typecheck = {
-      path = const true;
-      string = const true;
-      null = const true;
-      int = const true;
-      float = const true;
-      bool = const true;
-      list = List.all canConvert;
-      set = Fn.compose Opt.isJust Str.coerce;
-    };
-    canConvert = x: typecheck.${builtins.typeOf x} or (const false) x;
-  in x: Bool.toOptional (canConvert x) (Str.unsafeConvert x);
-  unsafeConvert = toString;
-  coerce = let
-    typecheck = {
-      path = const true;
-      string = const true;
-      set = x: x ? outPath || x ? __toString;
-    };
-    canCoerce = x: typecheck.${builtins.typeOf x} or (const false) x;
-  in x: Bool.toOptional (canCoerce x) (Str.unsafeCoerce x);
-  unsafeCoerce = builtins.substring 0 (-1);
 }
