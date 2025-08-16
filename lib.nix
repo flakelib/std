@@ -84,6 +84,9 @@
       src = ./system.nix;
       type = Ty.system;
     };
+    Tuple = {
+      upstream = std.tuple;
+    };
     Ty = {
       src = ./ty.nix;
       upstream = std.types;

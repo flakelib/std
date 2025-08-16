@@ -18,6 +18,7 @@ in {
     path = "Path";
     set = "Set";
     string = "Str";
+    tuple = "Tuple";
     num = [ "Int" "UInt" "Float" ];
 
     fixpoints = "Fix";
