@@ -29,9 +29,7 @@ in {
   toHex = num.toHexString;
   inherit (builtins) sub;
   FromBaseDigits = num.fromBaseDigits;
-  TryParse = x: let
-    i = x num.tryParseInt x;
-  in Opt.match (num.tryParseInt x) {
+  TryParse = x: Opt.match (num.tryParseInt x) {
     inherit (Opt) nothing;
     just = i: Opt.Iif (i >= 0) i;
   };
