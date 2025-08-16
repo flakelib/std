@@ -1,7 +1,6 @@
 { lib }: let
   inherit (lib.Std.std) string;
-  inherit (lib) Str List Bool Opt Fn Ty Nix;
-  inherit (Fn) const;
+  inherit (lib) Str List Ty Nix Regex;
 in {
   # backcompat
   index = string.unsafeIndex;
@@ -17,6 +16,9 @@ in {
   toSet = str:  { __toString = _: str; };
 
   raw = Nix.discardContext;
+
+  splitOn = delim: Regex.splitOn (Regex.escape delim);
+  split = Str.splitOn;
 
   is = x: List.elem (Ty.primitiveNameOf x) [ "path" "string" "null" "int" "float" "bool" ]
     || (Ty.list.check x && List.all Str.is x)
