@@ -9,6 +9,7 @@ in {
     popCount countTrailingZeros countLeadingZeros;
   and = bits.bitAnd;
   or' = bits.bitOr;
+  "or" = UInt.or';
   xor = bits.bitXor;
   not = bits.bitNot;
   shiftL = bits.shiftLU;
